@@ -1,3 +1,4 @@
+Step 1: Import Essential Libraries
 # Import essential data analysis and visualization libraries
 import numpy as np  # Numerical computing for arrays and matrices
 import pandas as pd  # Data manipulation and analysis with DataFrames

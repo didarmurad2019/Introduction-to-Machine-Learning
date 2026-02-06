@@ -1,14 +1,23 @@
-# Step 1: Import Essential Libraries
-# Import essential data analysis and visualization libraries
-import numpy as np  # Numerical computing for arrays and matrices
-import pandas as pd  # Data manipulation and analysis with DataFrames
-import matplotlib.pyplot as plt  # Core plotting library for static visualizations
-import seaborn as sns  # Statistical data visualization built on matplotlib
-import warnings  # Manage warning messages during execution
+# Step 1: Import Libraries and Load Data
+# Import essential data science libraries
+import numpy as np  # Numerical operations
+import pandas as pd  # Data manipulation and analysis
+import matplotlib.pyplot as plt  # Basic plotting
+import seaborn as sns  # Statistical visualization
+import warnings  # To suppress warnings
+warnings.filterwarnings('ignore')  # Ignore warning messages for cleaner output
 
-# Suppress warning messages for cleaner output during analysis
-warnings.filterwarnings('ignore')
+# Set visual styles for better looking plots
+sns.set_style("whitegrid")  # Use white grid background
+plt.rcParams['figure.figsize'] = (10, 6)  # Set default figure size
+%matplotlib inline  # Display plots inline in Jupyter notebook
 
-# Configure visualization aesthetics
-sns.set_style("whitegrid")  # Apply Seaborn's whitegrid style for clean plots
-plt.rcParams['figure.figsize'] = (10, 6)  # Set default figure size to 10x6 inches
+# Load Titanic dataset directly from seaborn (built-in dataset)
+df = sns.load_dataset('titanic')
+
+# Alternative: Load from CSV if you have it locally
+# df = pd.read_csv('titanic.csv')
+
+print("Dataset loaded successfully!")
+print(f"Shape: {df.shape}")  # Show number of rows and columns
+print(f"\nColumns: {list(df.columns)}")  # List all column names

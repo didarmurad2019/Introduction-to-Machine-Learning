@@ -1,1 +1,108 @@
-
+introduction-to-ml-spring2026/
+│
+├── 📁 .github/                           # GitHub-specific configurations
+│   ├── workflows/                       # CI/CD pipelines
+│   │   ├── test.yml                     # Run tests on push
+│   │   └── deploy-docs.yml              # Deploy documentation
+│   └── ISSUE_TEMPLATE/                  # Standardized issue templates
+│       ├── bug_report.md
+│       └── feature_request.md
+│
+├── 📁 docs/                             # Documentation (GitHub Pages ready)
+│   ├── index.md                         # Landing page
+│   ├── syllabus.md                      # Full course syllabus
+│   ├── setup-guide.md                   # Environment setup
+│   ├── lectures/                        # Lecture notes
+│   │   ├── lecture-01-ml-intro.md
+│   │   ├── lecture-02-eda-refresher.md
+│   │   └── slides/                      # PDF/PPT versions
+│   ├── labs/                           # Lab instructions
+│   │   ├── lab-01-eda-refresher.md
+│   │   └── solutions/                  # (Private or separate branch)
+│   └── _config.yml                      # Jekyll configuration
+│
+├── 📁 notebooks/                        # Jupyter notebooks
+│   ├── 📁 lecture-demos/
+│   │   ├── 01_ml_introduction.ipynb
+│   │   └── 02_eda_refresher.ipynb
+│   ├── 📁 labs/
+│   │   ├── lab_01_eda_starter.ipynb
+│   │   └── lab_01_solution.ipynb      # In separate branch
+│   └── 📁 student-work/                # Template for student submissions
+│       └── submission_template.ipynb
+│
+├── 📁 src/                              # Source code (reusable modules)
+│   ├── data/
+│   │   ├── __init__.py
+│   │   ├── loader.py                   # Data loading utilities
+│   │   └── preprocessor.py             # Data preprocessing
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── linear.py                   # Linear models
+│   │   └── neural.py                   # Neural network basics
+│   ├── visualization/
+│   │   ├── __init__.py
+│   │   └── eda_plots.py                # Custom EDA plotting functions
+│   └── utils/
+│       ├── __init__.py
+│       └── helpers.py                  # Helper functions
+│
+├── 📁 data/                             # Data directory (git-ignored, except samples)
+│   ├── 📁 raw/                          # Raw data (git-ignored)
+│   ├── 📁 processed/                    # Processed data (git-ignored)
+│   └── samples/                        # Small sample datasets for demos
+│       ├── titanic_sample.csv
+│       └── boston_housing_sample.csv
+│
+├── 📁 projects/                         # Capstone project resources
+│   ├── project_guidelines.md
+│   ├── project_ideas.md
+│   ├── proposal_template.md
+│   └── example_projects/               # Previous student projects
+│       ├── README.md
+│       └── example-1/                  # With permission from students
+│
+├── 📁 tests/                            # Unit tests
+│   ├── test_data_loader.py
+│   ├── test_models.py
+│   └── test_utils.py
+│
+├── 📁 environments/                     # Environment configurations
+│   ├── requirements.txt                # Basic requirements
+│   ├── requirements-dev.txt            # Development requirements
+│   ├── environment.yml                 # Conda environment
+│   └── Dockerfile                      # Docker configuration
+│
+├── 📁 assignments/                      # Homework assignments
+│   ├── hw1/                           # Each as separate folder
+│   │   ├── README.md                  # Instructions
+│   │   ├── hw1.ipynb                  # Starter notebook
+│   │   └── data/                      # Assignment-specific data
+│   └── submissions/                   # Student submissions (git-ignored)
+│
+├── 📁 resources/                        # Additional resources
+│   ├── cheatsheets/
+│   │   ├ pandas_cheatsheet.pdf
+│   │   └ matplotlib_cheatsheet.pdf
+│   ├── reading/
+│   │   ├── papers/                    # Key research papers
+│   │   └── articles/                  # Blog posts, tutorials
+│   └── datasets/                      # Dataset references and links
+│       ├── kaggle_links.md
+│       └── uci_links.md
+│
+├── 📁 .vscode/                         # VS Code settings (optional)
+│   ├── settings.json
+│   └── extensions.json
+│
+├── 📁 reports/                         # Generated reports
+│   ├── project_final/                 # Final project reports
+│   └── lab_reports/                   # Lab reports
+│
+├── .gitignore                         # Git ignore file
+├── .pre-commit-config.yaml            # Pre-commit hooks
+├── LICENSE                            # MIT or other license
+├── Makefile                           # Common commands
+├── pyproject.toml                     # Modern Python project config
+├── README.md                          # Main repository README
+└── CONTRIBUTING.md                    # Contribution guidelines

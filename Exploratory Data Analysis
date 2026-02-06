@@ -1,4 +1,4 @@
-# Step 1: Import Essential Libraries
+# Step 1: Import Essential Libraries.......................
 # Import essential data analysis and visualization libraries
 import numpy as np  # Numerical computing for arrays and matrices
 import pandas as pd  # Data manipulation and analysis with DataFrames
@@ -13,7 +13,8 @@ warnings.filterwarnings('ignore')
 sns.set_style("whitegrid")  # Apply Seaborn's whitegrid style for clean plots
 plt.rcParams['figure.figsize'] = (10, 6)  # Set default figure size to 10x6 inches
 
-# Step 2: Load and First Look at Data
+# Step 2: Load and First Look at Data.................................
+
 # Load dataset from CSV file (example uses Titanic dataset, replace with your actual file)
 # Note: Update 'your_dataset.csv' with the actual path to your dataset file
 df = pd.read_csv('your_dataset.csv')
@@ -36,3 +37,325 @@ print(df.describe())  # Includes count, mean, std, min, percentiles, max for num
 # Check for missing values in each column to identify data quality issues
 print("\nMissing Values:")
 print(df.isnull().sum())  # Count of null/NaN values per column, crucial for data cleaning
+
+# Step 3: Check Data Types and Structure.......................................
+
+# Display data types for each column to understand the structure of the dataset
+# This helps identify categorical vs numerical variables for appropriate analysis
+print("Data Types:")
+print(df.dtypes)  # Shows pandas dtype (int64, float64, object, bool, datetime64, etc.)
+
+# Analyze unique values in each column to assess feature cardinality
+# High cardinality may indicate ID-like features, while low cardinality suggests categorical variables
+print("\nUnique values per column:")
+for col in df.columns:
+    # Count distinct values for each column; useful for feature engineering decisions
+    print(f"{col}: {df[col].nunique()} unique values")  
+    # Note: nunique() excludes NaN values by default (use dropna=False to include them)
+
+# Step 4: Handle Missing Values.................................................
+
+# Visualize missing values using a heatmap for pattern identification
+# This helps identify if missing values are random or follow a specific pattern
+plt.figure(figsize=(12, 6))
+sns.heatmap(df.isnull(),  # Create boolean matrix where True indicates missing value
+            yticklabels=False,  # Hide y-axis tick labels for cleaner visualization
+            cbar=False,  # Remove color bar since we only show missing/not missing
+            cmap='viridis')  # Color scheme: yellow=missing, purple=non-missing
+plt.title('Missing Values Heatmap')
+plt.show()
+
+# Calculate and display missing value percentages for each column
+# Understanding the proportion helps decide appropriate handling strategies
+missing_percent = (df.isnull().sum() / len(df)) * 100  # Calculate percentage missing per column
+
+# Create a DataFrame to organize missing value information
+missing_df = pd.DataFrame({
+    'column': df.columns,
+    'missing_percent': missing_percent.values  # Store calculated percentages
+})
+
+# Filter to show only columns with missing values, sorted from highest to lowest
+missing_df = missing_df[missing_df['missing_percent'] > 0].sort_values('missing_percent', ascending=False)
+
+print("Columns with missing values:")
+print(missing_df)
+
+# Strategy: Impute missing values based on column data type
+# Different approaches for categorical vs numerical variables
+for col in df.columns:
+    if df[col].isnull().sum() > 0:  # Only process columns with missing values
+        if df[col].dtype == 'object':  # Check if column is categorical (object dtype)
+            # Fill categorical missing values with the mode (most frequent value)
+            df[col].fillna(df[col].mode()[0], inplace=True)  # [0] gets first mode if multiple
+        else:
+            # Fill numerical missing values with the median (robust to outliers)
+            df[col].fillna(df[col].median(), inplace=True)
+
+# Note: Alternative strategies could include:
+# - Dropping columns with >50% missing values
+# - Using more advanced imputation (KNN, MICE)
+# - Creating indicator variables for missingness
+# - Domain-specific imputation
+
+# Step 5: Univariate Analysis......................................
+# Numerical Features
+
+# Select numerical columns for analysis
+# np.number includes int and float dtypes, excluding categorical/object and datetime
+num_cols = df.select_dtypes(include=[np.number]).columns
+
+# Create distribution visualization for each numerical feature
+# Subplot grid: rows = number of numerical columns, columns = 2 (histogram + boxplot)
+fig, axes = plt.subplots(len(num_cols), 2, figsize=(15, 5*len(num_cols)))
+
+# Iterate through each numerical column and create visualizations
+for i, col in enumerate(num_cols):
+    
+    # Left column: Histogram with Kernel Density Estimate (KDE)
+    # Histogram shows frequency distribution, KDE shows smoothed probability density
+    sns.histplot(df[col], kde=True, ax=axes[i, 0])
+    axes[i, 0].set_title(f'Distribution of {col}')
+    axes[i, 0].set_xlabel(col)  # Set x-axis label
+    axes[i, 0].set_ylabel('Frequency')  # Set y-axis label
+    
+    # Right column: Box plot for outlier detection and quartile visualization
+    # Shows median, quartiles, and potential outliers
+    sns.boxplot(y=df[col], ax=axes[i, 1])
+    axes[i, 1].set_title(f'Box Plot of {col}')
+    axes[i, 1].set_ylabel(col)  # Set y-axis label
+
+# Adjust subplot spacing to prevent label overlapping
+plt.tight_layout()
+plt.show()
+
+# Print comprehensive statistical summary for each numerical column
+print("Numerical Features Summary:")
+for col in num_cols:
+    print(f"\n{col}:")
+    print(f"  Mean: {df[col].mean():.2f}")           # Average value
+    print(f"  Median: {df[col].median():.2f}")       # Middle value (50th percentile)
+    print(f"  Std Dev: {df[col].std():.2f}")         # Measure of spread/variability
+    print(f"  Skewness: {df[col].skew():.2f}")       # Measure of asymmetry in distribution
+    # Positive skew: right-tailed, Negative skew: left-tailed, 0: symmetric
+    print(f"  Kurtosis: {df[col].kurtosis():.2f}")   # Measure of tail heaviness
+    # High kurtosis: heavy tails (more outliers), Low kurtosis: light tails
+
+# Additional considerations:
+# - For skewed features, consider transformation (log, sqrt, Box-Cox)
+# - For high kurtosis, investigate potential outliers
+# - Compare mean vs median to assess symmetry (similar values suggest normal distribution)
+
+# Categorical Features
+
+# Select categorical columns for analysis
+# 'object' dtype typically includes strings and mixed types; can also include 'category' dtype
+cat_cols = df.select_dtypes(include=['object']).columns
+
+# Create bar plots to visualize distribution of categorical features
+# Single column layout: each categorical feature gets its own subplot
+fig, axes = plt.subplots(len(cat_cols), 1, figsize=(15, 5*len(cat_cols)))
+
+# Handle case when there's only one categorical column
+# subplots() returns axes differently for single vs multiple plots
+if len(cat_cols) == 1:
+    axes = [axes]  # Convert to list for consistent indexing
+
+# Iterate through each categorical column and create visualization
+for i, col in enumerate(cat_cols):
+    
+    # Calculate frequency of each category
+    value_counts = df[col].value_counts()
+    
+    # Create bar chart showing category frequencies
+    bars = axes[i].bar(value_counts.index, value_counts.values)
+    axes[i].set_title(f'Distribution of {col}')
+    axes[i].set_xlabel(col)  # Set x-axis label as column name
+    axes[i].set_ylabel('Count')  # Set y-axis label
+    
+    # Rotate x-axis labels for better readability (especially for long category names)
+    axes[i].tick_params(axis='x', rotation=45)
+    
+    # Add count labels on top of each bar for precise value reading
+    for bar, count in zip(bars, value_counts.values):
+        height = bar.get_height()  # Get bar height (count value)
+        axes[i].text(bar.get_x() + bar.get_width()/2.,  # Center text horizontally on bar
+                    height + 0.1,  # Position text slightly above bar
+                    f'{count}',  # Display count value
+                    ha='center',  # Horizontal alignment: center
+                    va='bottom',  # Vertical alignment: bottom of text at position
+                    fontsize=9)  # Set font size for readability
+
+# Adjust layout to prevent overlapping elements
+plt.tight_layout()
+plt.show()
+
+# Additional insights that could be added:
+# - Percentage distribution alongside counts
+# - Option to limit to top N categories for high-cardinality features
+# - Horizontal bar charts for features with many categories
+# - Color-coding based on category importance or hierarchy
+
+# Step 6: Bivariate/Multivariate Analysis.....................................
+
+# Calculate and visualize correlation matrix for numerical features
+# Correlation measures linear relationships between variables (-1 to 1)
+plt.figure(figsize=(12, 8))
+
+# Compute correlation matrix using Pearson correlation coefficient
+correlation_matrix = df[num_cols].corr()  # Returns square matrix of correlation values
+
+# Create heatmap visualization of correlation matrix
+sns.heatmap(correlation_matrix, 
+            annot=True,  # Display correlation values in each cell
+            cmap='coolwarm',  # Color scheme: blue=negative, red=positive correlation
+            center=0,  # Center color map at 0 (neutral correlation)
+            fmt='.2f',  # Format annotation to 2 decimal places
+            square=True,  # Make cells square-shaped
+            linewidths=0.5)  # Add lines between cells for clarity
+
+plt.title('Correlation Matrix of Numerical Features')
+plt.tight_layout()  # Adjust layout to prevent label cutoff
+plt.show()
+
+# Identify and report highly correlated feature pairs
+# High correlation (|r| > 0.5) may indicate redundancy or multicollinearity
+high_corr_pairs = []
+
+# Iterate through upper triangle of correlation matrix (excluding diagonal)
+for i in range(len(correlation_matrix.columns)):
+    for j in range(i+1, len(correlation_matrix.columns)):
+        corr_value = correlation_matrix.iloc[i, j]
+        # Check if absolute correlation exceeds threshold
+        if abs(corr_value) > 0.5:  # Adjust threshold as needed (0.7 for stricter filtering)
+            high_corr_pairs.append((correlation_matrix.columns[i], 
+                                  correlation_matrix.columns[j], 
+                                  corr_value))
+
+# Sort pairs by absolute correlation strength (strongest first)
+high_corr_pairs.sort(key=lambda x: abs(x[2]), reverse=True)
+
+print("Highly Correlated Features (|corr| > 0.5):")
+for pair in high_corr_pairs:
+    feature1, feature2, corr_value = pair
+    corr_type = "positive" if corr_value > 0 else "negative"
+    print(f"{feature1} vs {feature2}: {corr_value:.3f} ({corr_type} correlation)")
+
+# Interpretation notes:
+# - Correlation > 0.7: Consider feature removal or dimensionality reduction
+# - Positive correlation: Variables increase together
+# - Negative correlation: Variables move in opposite directions
+# - Near 0: Little to no linear relationship
+
+# Additional analysis options:
+# 1. Visualize specific high-correlation relationships:
+#    if high_corr_pairs:
+#        fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+#        feat1, feat2, _ = high_corr_pairs[0]  # Get strongest correlation
+#        sns.scatterplot(data=df, x=feat1, y=feat2, ax=ax)
+#        ax.set_title(f'{feat1} vs {feat2} (corr: {corr_value:.3f})')
+#        plt.show()
+#        
+# 2. For feature selection:
+#    - Remove one of highly correlated pairs (|r| > 0.8)
+#    - Use PCA or other dimensionality reduction techniques
+#    - Consider domain knowledge for feature importance
+
+# Step 7: Target Variable Analysis (for Supervised ML).......................
+
+# If you have a target variable (for supervised learning problems)
+# Set this to your actual target column name (dependent variable)
+target_col = 'target_column_name'  # Change this to your target column
+
+# Check if target column exists in the dataframe
+if target_col in df.columns:
+    print(f"Target Variable: {target_col}")
+    print(f"Target dtype: {df[target_col].dtype}")
+    print(f"Unique values in target: {df[target_col].nunique()}")
+    
+    # Create visualizations to understand target variable distribution
+    plt.figure(figsize=(12, 5))
+    
+    # Left plot: Distribution of target variable
+    plt.subplot(1, 2, 1)
+    if df[target_col].dtype == 'object':
+        # For categorical targets (classification problems)
+        # Count plot shows frequency of each class - important for class imbalance detection
+        sns.countplot(data=df, x=target_col)
+        plt.title('Target Distribution (Categorical)')
+        plt.xlabel(target_col)
+        plt.ylabel('Count')
+        
+        # Add count labels on bars for clarity
+        ax = plt.gca()
+        for p in ax.patches:
+            ax.annotate(f'{p.get_height():.0f}', 
+                       (p.get_x() + p.get_width() / 2., p.get_height()), 
+                       ha='center', va='center', xytext=(0, 5), textcoords='offset points')
+    else:
+        # For numerical targets (regression problems)
+        # Histogram with KDE shows distribution shape, skewness, and potential outliers
+        sns.histplot(df[target_col], kde=True)
+        plt.title('Target Distribution (Numerical)')
+        plt.xlabel(target_col)
+        plt.ylabel('Frequency')
+        
+        # Add vertical lines for mean and median
+        plt.axvline(df[target_col].mean(), color='red', linestyle='--', label=f'Mean: {df[target_col].mean():.2f}')
+        plt.axvline(df[target_col].median(), color='green', linestyle='-', label=f'Median: {df[target_col].median():.2f}')
+        plt.legend()
+    
+    # Right plot: Relationship between target and a key feature
+    plt.subplot(1, 2, 2)
+    if len(num_cols) > 0:
+        # Choose first numerical feature (or select specific feature based on domain knowledge)
+        feature = num_cols[0]
+        
+        if df[target_col].dtype == 'object':
+            # For categorical targets: Box plot shows feature distribution per target class
+            # Helps identify which features differentiate between classes
+            sns.boxplot(data=df, x=target_col, y=feature)
+            plt.title(f'{feature} Distribution by {target_col}')
+            plt.xlabel(target_col)
+            plt.ylabel(feature)
+        else:
+            # For numerical targets: Scatter plot shows relationship between feature and target
+            # Helps identify linear/non-linear relationships and outliers
+            sns.scatterplot(data=df, x=feature, y=target_col)
+            plt.title(f'{target_col} vs {feature}')
+            plt.xlabel(feature)
+            plt.ylabel(target_col)
+            
+            # Add regression line to visualize trend
+            sns.regplot(data=df, x=feature, y=target_col, scatter=False, color='red', line_kws={'linewidth': 2})
+    else:
+        plt.text(0.5, 0.5, 'No numerical features available', 
+                horizontalalignment='center', verticalalignment='center')
+        plt.title('No Numerical Features')
+    
+    plt.tight_layout()
+    plt.show()
+    
+    # Additional target analysis that could be added:
+    # 1. For classification: Class balance analysis
+    #    if df[target_col].dtype == 'object':
+    #        class_dist = df[target_col].value_counts(normalize=True) * 100
+    #        print(f"\nClass Distribution (%):")
+    #        for cls, perc in class_dist.items():
+    #            print(f"  {cls}: {perc:.1f}%")
+    #    
+    # 2. For regression: Basic statistics
+    #    else:
+    #        print(f"\nTarget Statistics:")
+    #        print(f"  Min: {df[target_col].min():.2f}")
+    #        print(f"  Max: {df[target_col].max():.2f}")
+    #        print(f"  Range: {df[target_col].max() - df[target_col].min():.2f}")
+    #        print(f"  Skewness: {df[target_col].skew():.3f}")
+    #        print(f"  Kurtosis: {df[target_col].kurtosis():.3f}")
+    
+else:
+    print(f"Warning: '{target_col}' not found in dataframe columns.")
+    print(f"Available columns: {list(df.columns)}")
+    print("\nFor unsupervised learning or if you don't have a target variable,")
+    print("proceed with exploratory analysis without target-specific visualizations.")
+

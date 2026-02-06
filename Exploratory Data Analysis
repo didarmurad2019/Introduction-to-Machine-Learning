@@ -1,5 +1,4 @@
 # Step 1: Import Essential Libraries
-<br>
 # Import essential data analysis and visualization libraries
 import numpy as np  # Numerical computing for arrays and matrices
 import pandas as pd  # Data manipulation and analysis with DataFrames
@@ -13,3 +12,27 @@ warnings.filterwarnings('ignore')
 # Configure visualization aesthetics
 sns.set_style("whitegrid")  # Apply Seaborn's whitegrid style for clean plots
 plt.rcParams['figure.figsize'] = (10, 6)  # Set default figure size to 10x6 inches
+
+# Step 2: Load and First Look at Data
+# Load dataset from CSV file (example uses Titanic dataset, replace with your actual file)
+# Note: Update 'your_dataset.csv' with the actual path to your dataset file
+df = pd.read_csv('your_dataset.csv')
+
+# Quick overview of dataset dimensions (rows, columns)
+print("Dataset Shape:", df.shape)  # Returns tuple (number_of_rows, number_of_columns)
+
+# Display first 5 rows to preview data structure and values
+print("\nFirst 5 rows:")
+print(df.head())  # Shows column names and initial data entries
+
+# Print dataset metadata: column names, data types, non-null counts, and memory usage
+print("\nDataset Info:")
+print(df.info())  # Essential for understanding data types and missing value patterns
+
+# Generate descriptive statistics for numerical columns
+print("\nBasic Statistics:")
+print(df.describe())  # Includes count, mean, std, min, percentiles, max for numeric data
+
+# Check for missing values in each column to identify data quality issues
+print("\nMissing Values:")
+print(df.isnull().sum())  # Count of null/NaN values per column, crucial for data cleaning

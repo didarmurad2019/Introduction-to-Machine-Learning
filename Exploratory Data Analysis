@@ -359,3 +359,341 @@ else:
     print("\nFor unsupervised learning or if you don't have a target variable,")
     print("proceed with exploratory analysis without target-specific visualizations.")
 
+# Step 8: Outlier Detection.........................
+
+# Outlier Detection using Interquartile Range (IQR) Method
+# IQR is robust to extreme values and works well for most distributions
+def detect_outliers_iqr(data, column):
+    """
+    Detect outliers using IQR method for a specific column.
+    
+    Parameters:
+    -----------
+    data : pandas DataFrame
+        The dataset containing the column
+    column : str
+        The column name to analyze for outliers
+    
+    Returns:
+    --------
+    pandas DataFrame
+        Rows containing outliers in the specified column
+    
+    Methodology:
+    ------------
+    1. Calculate Q1 (25th percentile) and Q3 (75th percentile)
+    2. Compute IQR = Q3 - Q1
+    3. Define bounds: Q1 - 1.5*IQR (lower) and Q3 + 1.5*IQR (upper)
+    4. Values outside these bounds are considered outliers
+    """
+    # Calculate quartiles
+    Q1 = data[column].quantile(0.25)  # First quartile (25th percentile)
+    Q3 = data[column].quantile(0.75)  # Third quartile (75th percentile)
+    IQR = Q3 - Q1  # Interquartile Range (middle 50% of data)
+    
+    # Define outlier boundaries (1.5*IQR is standard, can adjust for sensitivity)
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    
+    # Identify rows with values outside the boundaries
+    outliers = data[(data[column] < lower_bound) | (data[column] > upper_bound)]
+    
+    return outliers, lower_bound, upper_bound, Q1, Q3, IQR
+
+# Analyze outliers for each numerical column
+print("Outlier Analysis using IQR Method:")
+print("=" * 50)
+
+for col in num_cols:
+    # Detect outliers for current column
+    outliers, lower_bound, upper_bound, Q1, Q3, IQR = detect_outliers_iqr(df, col)
+    
+    if len(outliers) > 0:
+        # Calculate percentage of outliers
+        outlier_percentage = len(outliers) / len(df) * 100
+        
+        print(f"\n{col}:")
+        print(f"  IQR Range: [{Q1:.2f}, {Q3:.2f}] (IQR: {IQR:.2f})")
+        print(f"  Bounds: [{lower_bound:.2f}, {upper_bound:.2f}]")
+        print(f"  Outliers: {len(outliers)} rows ({outlier_percentage:.2f}%)")
+        
+        # Show summary statistics of outliers
+        print(f"  Outlier min: {outliers[col].min():.2f}")
+        print(f"  Outlier max: {outliers[col].max():.2f}")
+        
+        # Optional: Show a few example outlier values
+        if len(outliers) <= 5:  # If few outliers, show all
+            print(f"  Outlier values: {sorted(outliers[col].unique())}")
+    else:
+        print(f"\n{col}: No outliers detected (0%)")
+
+print("\n" + "=" * 50)
+print("Interpretation & Next Steps:")
+print("- Consider business context before treating outliers")
+print("- For high outlier percentages (>5%), investigate data quality")
+print("- For critical features, visualize outliers before deciding treatment")
+print("- Options: Keep, Remove, Transform (log, sqrt), or Cap/Winsorize")
+
+# Optional: Visualize outliers for the first few numerical columns
+if len(num_cols) > 0:
+    print("\nVisualizing outliers for first 3 numerical features...")
+    fig, axes = plt.subplots(min(3, len(num_cols)), 2, figsize=(15, 4 * min(3, len(num_cols))))
+    
+    if min(3, len(num_cols)) == 1:
+        axes = [axes]  # Handle single subplot case
+    
+    for i, col in enumerate(num_cols[:3]):
+        # Left: Box plot highlighting outliers
+        sns.boxplot(y=df[col], ax=axes[i, 0], color='skyblue')
+        axes[i, 0].set_title(f'Box Plot: {col}')
+        axes[i, 0].set_ylabel(col)
+        
+        # Right: Scatter plot showing outlier positions
+        x_positions = np.random.normal(0, 0.1, size=len(df[col]))  # Jitter for better visualization
+        axes[i, 1].scatter(x_positions, df[col], alpha=0.5)
+        
+        # Mark outliers with different color
+        outliers, _, upper_bound, _, _, _ = detect_outliers_iqr(df, col)
+        if len(outliers) > 0:
+            outlier_indices = outliers.index
+            outlier_positions = x_positions[outlier_indices]
+            axes[i, 1].scatter(outlier_positions, outliers[col], color='red', label='Outliers', alpha=0.7)
+            
+        axes[i, 1].axhline(y=upper_bound, color='orange', linestyle='--', label='Upper Bound')
+        axes[i, 1].set_title(f'Outlier Scatter: {col}')
+        axes[i, 1].set_ylabel(col)
+        axes[i, 1].legend()
+        axes[i, 1].set_xlim(-0.5, 0.5)
+    
+    plt.tight_layout()
+    plt.show()
+
+# Step 9: Correlation Analysis
+
+# ========================================================
+# CORRELATION ANALYSIS
+# ========================================================
+# Correlation analysis helps understand linear relationships between numerical features
+# and the target variable (survival in this case)
+print("=== CORRELATION ANALYSIS ===")
+print("=" * 50)
+
+# First, check which numerical columns we have
+# This ensures we only analyze columns that exist in the dataframe
+print("Available numerical columns:")
+available_num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+print(available_num_cols)
+print(f"Total: {len(available_num_cols)} numerical columns")
+
+# Select numerical features for correlation analysis
+# We're interested in specific predefined features; adjust this list as needed
+num_features = []
+target_column = 'survived'  # Define target variable for correlation analysis
+
+# List of features to analyze (customize based on your dataset)
+feature_list = ['survived', 'pclass', 'age', 'sibsp', 'parch', 'fare', 'has_deck']
+
+print(f"\nChecking for predefined features:")
+for col in feature_list:
+    if col in df.columns:
+        num_features.append(col)
+        print(f"  ✓ {col} found")
+    else:
+        print(f"  ✗ Warning: '{col}' not found in dataframe")
+
+print(f"\nUsing features for correlation analysis: {num_features}")
+
+# Calculate correlation matrix using Pearson correlation coefficient
+# Values range from -1 (perfect negative correlation) to +1 (perfect positive correlation)
+corr_matrix = df[num_features].corr(method='pearson')  # Default method
+
+print(f"\nCorrelation Matrix (Pearson correlation coefficients):")
+print(corr_matrix.round(3))  # Round to 3 decimal places for readability
+
+# Visualize correlation matrix using heatmap
+plt.figure(figsize=(12, 8))
+sns.heatmap(corr_matrix, 
+            annot=True,        # Display correlation values in each cell
+            cmap='coolwarm',   # Blue for negative, red for positive correlation
+            center=0,          # Center colormap at zero correlation
+            square=True,       # Make cells square
+            linewidths=1,      # Add grid lines between cells
+            linecolor='white', # White grid lines
+            cbar_kws={"shrink": 0.8},  # Adjust color bar size
+            fmt='.2f',         # Format annotation to 2 decimal places
+            annot_kws={'size': 10},  # Annotation font size
+            vmin=-1, vmax=1)   # Set color scale limits
+
+plt.title('Correlation Matrix of Numerical Features', fontsize=14, fontweight='bold')
+plt.tight_layout()
+plt.show()
+
+# ========================================================
+# INTERPRETING CORRELATIONS WITH SURVIVAL
+# ========================================================
+print("\n" + "=" * 50)
+print("📈 TOP FEATURES CORRELATED WITH SURVIVAL")
+print("=" * 50)
+
+# Extract correlations with the target variable
+survival_corr = corr_matrix[target_column].sort_values(ascending=False)
+
+print(f"\nAll correlations with '{target_column}' (sorted by strength):")
+for feature, corr in survival_corr.items():
+    if feature != target_column:
+        strength = "Strong" if abs(corr) > 0.5 else "Moderate" if abs(corr) > 0.3 else "Weak"
+        direction = "Positive" if corr > 0 else "Negative"
+        print(f"  {feature:10} | {corr:+.3f} | {direction:8} | {strength:7} correlation")
+
+# Categorize correlations by direction and strength
+print("\n" + "=" * 50)
+print("Positive correlation (higher value = more likely to survive):")
+print("-" * 30)
+for feature, corr in survival_corr.items():
+    if feature != target_column and corr > 0:
+        print(f"  ➕ {feature:10}: {corr:.3f} {'█' * int(abs(corr) * 20)}")
+
+print("\nNegative correlation (higher value = less likely to survive):")
+print("-" * 30)
+for feature, corr in survival_corr.items():
+    if feature != target_column and corr < 0:
+        print(f"  ➖ {feature:10}: {corr:.3f} {'█' * int(abs(corr) * 20)}")
+
+print("\nNear-zero correlation (little linear relationship with survival):")
+print("-" * 30)
+for feature, corr in survival_corr.items():
+    if feature != target_column and abs(corr) < 0.1:
+        print(f"  ↔️  {feature:10}: {corr:.3f}")
+
+print("\n" + "=" * 50)
+print("INTERPRETATION GUIDE:")
+print("-" * 30)
+print("• Strong correlation: |r| > 0.5")
+print("• Moderate correlation: 0.3 < |r| < 0.5")
+print("• Weak correlation: 0.1 < |r| < 0.3")
+print("• Negligible correlation: |r| < 0.1")
+print("\nNote: Correlation ≠ Causation")
+print("High correlation suggests relationship but doesn't prove cause-effect")
+
+# ========================================================
+# ADDITIONAL INSIGHTS
+# ========================================================
+print("\n" + "=" * 50)
+print("🔍 ADDITIONAL INSIGHTS")
+print("=" * 50)
+
+# Feature pairs with high correlation (potential multicollinearity)
+print("\nHigh feature-feature correlations (|r| > 0.7) to check for multicollinearity:")
+high_corr_pairs = []
+for i in range(len(corr_matrix.columns)):
+    for j in range(i+1, len(corr_matrix.columns)):
+        corr_val = corr_matrix.iloc[i, j]
+        if abs(corr_val) > 0.7 and corr_matrix.columns[i] != target_column and corr_matrix.columns[j] != target_column:
+            high_corr_pairs.append((corr_matrix.columns[i], corr_matrix.columns[j], corr_val))
+
+if high_corr_pairs:
+    for feat1, feat2, corr_val in high_corr_pairs:
+        print(f"  ⚠ {feat1} ↔ {feat2}: {corr_val:.3f}")
+    print("  Note: High correlation between features may cause multicollinearity in regression models")
+else:
+    print("  No concerning multicollinearity detected (|r| < 0.7 for all feature pairs)")
+
+# Statistical significance of correlations (optional)
+print(f"\nNote: For n={len(df)} samples, correlation is statistically significant at p<0.05 if |r| > {1.96/np.sqrt(len(df)):.3f}")
+
+
+# Step 10: Feature Engineering Insights.....................................
+
+# Check for constant or quasi-constant features
+# These features provide little to no predictive power and can be removed
+# Constant features: Same value for all observations
+# Quasi-constant features: Very low variance (e.g., >99% same value)
+
+constant_features = []  # Store features with only one unique value
+quasi_constant_features = []  # Store features with very low variance
+
+print("Constant and Quasi-Constant Feature Analysis:")
+print("=" * 50)
+
+# Define threshold for quasi-constant features (adjust as needed)
+quasi_constant_threshold = 0.01  # 1% - features with <1% unique values are flagged
+
+for col in df.columns:
+    # Calculate number of unique values in the column
+    unique_count = df[col].nunique(dropna=True)  # Exclude NaN when counting uniques
+    unique_ratio = unique_count / len(df)  # Proportion of unique values
+    
+    # Check for constant features (only one unique value)
+    if unique_count == 1:
+        constant_features.append(col)
+        print(f"✓ Constant feature detected: '{col}'")
+        print(f"  - Single value: '{df[col].iloc[0]}'")
+        print(f"  - Feature provides zero variance")
+    
+    # Check for quasi-constant features (very low variance)
+    elif unique_ratio < quasi_constant_threshold:
+        quasi_constant_features.append((col, unique_count, unique_ratio * 100))
+        print(f"⚠ Quasi-constant feature detected: '{col}'")
+        print(f"  - Unique values: {unique_count}")
+        print(f"  - Percentage of unique values: {unique_ratio * 100:.2f}%")
+        print(f"  - Value distribution:")
+        
+        # Show value counts for the top few values
+        value_counts = df[col].value_counts(dropna=True).head(5)
+        for value, count in value_counts.items():
+            percentage = count / len(df) * 100
+            print(f"    '{value}': {count} rows ({percentage:.1f}%)")
+        print()
+
+print("=" * 50)
+
+# Summary of findings
+if constant_features:
+    print(f"\nConstant Features ({len(constant_features)} found):")
+    for i, col in enumerate(constant_features, 1):
+        print(f"  {i}. {col}")
+else:
+    print("\nNo constant features found.")
+
+if quasi_constant_features:
+    print(f"\nQuasi-Constant Features ({len(quasi_constant_features)} found, <{quasi_constant_threshold*100:.0f}% unique values):")
+    quasi_constant_features.sort(key=lambda x: x[2])  # Sort by uniqueness ratio (ascending)
+    for i, (col, unique_count, unique_percent) in enumerate(quasi_constant_features, 1):
+        print(f"  {i}. {col}: {unique_count} unique values ({unique_percent:.2f}%)")
+else:
+    print(f"\nNo quasi-constant features found (threshold: <{quasi_constant_threshold*100:.0f}% unique values).")
+
+print("\n" + "=" * 50)
+print("Recommended Actions:")
+print("1. Constant features: Remove (df.drop(columns=constant_features, inplace=True))")
+print("2. Quasi-constant features:")
+print("   - Evaluate business importance")
+print("   - Consider removing if not domain-critical")
+print("   - Could be useful as indicators (e.g., 'rare event' flags)")
+print("3. Consider feature variance threshold for removal (e.g., VarianceThreshold in sklearn)")
+
+# Optional: Statistical test for feature variance
+print("\n" + "=" * 50)
+print("Statistical Variance Analysis (numerical features only):")
+print("-" * 30)
+
+# Calculate variance for numerical features
+for col in num_cols:
+    variance = df[col].var()
+    std_dev = df[col].std()
+    cv = std_dev / df[col].mean() if df[col].mean() != 0 else np.inf  # Coefficient of Variation
+    
+    print(f"{col}:")
+    print(f"  Variance: {variance:.4f}")
+    print(f"  Std Dev: {std_dev:.4f}")
+    print(f"  Coeff of Variation: {cv:.4f}")
+    
+    # Flag low variance features
+    if variance < 0.01:  # Threshold for low variance
+        print(f"  ⚠ Low variance warning (consider removal)")
+    print
+
+# Step 10: Export Cleaned Data and Report......................................
+
+
+

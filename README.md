@@ -49,6 +49,7 @@ conda install numpy pandas matplotlib seaborn scikit-learn
 For Deep Learning:
 conda install pytorch torchvision torchaudio -c pytorch
 conda install tensorflow
+
 Step-5: Launch JupyterLab
 jupyter lab
 Browser will open automatically:

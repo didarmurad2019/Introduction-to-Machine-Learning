@@ -7,12 +7,13 @@ Any version suggestion download 1-2 old version (https://www.python.org/download
 Just for check go through python --version or python3 --version
 pip --version
 If these commands fail, you need to install Python first: (https://www.python.org/downloads/)
-Upgrade pip (optional but recommended) python -m pip install --upgrade pip
+Install pip Using ensurepip (Recommended), command python -m ensurepip --upgrade
+After that upgrade pip, command python -m pip install --upgrade pip
 
 Step-2: Install Jupyter Lab via pip 
 Use command pip install jupyterlab
 On some systems you might need python3 -m pip install jupyterlab 
-(Note: if python3 not work use just python, again you have problem see upgrade your pip using command python -m pip install --upgrade pip)
+(Note: if python3 not work use just python, again you have problem see upgrade your pip)
 Launch JupyterLab
 After installation, start JupyterLab with: use command jupyter lab
 This will open JupyterLab in your default web browser.

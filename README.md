@@ -11,7 +11,8 @@ Upgrade pip (optional but recommended) python -m pip install --upgrade pip
 
 Step-2: Install Jupyter Lab via pip 
 Use command pip install jupyterlab
-On some systems you might need python3 -m pip install jupyterlab
+On some systems you might need python3 -m pip install jupyterlab 
+(Note: if python3 not work use just python, again you have problem see upgrade your pip using command python -m pip install --upgrade pip)
 Launch JupyterLab
 After installation, start JupyterLab with: use command jupyter lab
 This will open JupyterLab in your default web browser.

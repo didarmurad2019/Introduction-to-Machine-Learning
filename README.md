@@ -38,7 +38,7 @@ I’ve used Conda (https://colab.research.google.com/) and pip (https://pypi.org
 <br>
 ✅ Best Way in 2025: Use uv
 <br>
-Try Option 1 (uv) first — it's modern and fast. If you run into trouble, you can try Option 2 (Conda) instead.
+Try Option (uv) first — it's modern and fast. If you run into trouble, you can try Option 2 (Conda) instead.
 <br>
 
 # Using uv🧰 

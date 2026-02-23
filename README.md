@@ -19,7 +19,7 @@ After installation, start JupyterLab with: use command jupyter lab
 This will open JupyterLab in your default web browser.
 The terminal will show a URL like http://localhost:8888/lab.
 
-# Option-II🔬
+# Option-II
 # Python Setup Tips🐍
 <br>
 💡 If You’re Using Google Colab

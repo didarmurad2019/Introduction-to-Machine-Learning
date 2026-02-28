@@ -94,7 +94,8 @@ source .venv/bin/activate
 <br>
 On Windows:
 <br>
-.venv\Scripts\activate
+.venv\Scripts\activate 
+Please if it not work use this .venv\Scripts\activate.bat
 <br>
 or
 <br>
